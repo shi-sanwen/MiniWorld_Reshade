@@ -187,4 +187,4 @@ limitations under the License.
 
 
 # QQ群
-<img width="1299" height="900" alt="Snipaste_2025-08-13_18-55-59" src="https://github.com/user-attachments/assets/2dc9e1ff-7fa2-4814-83a7-628d1c627d06" />
+<img width="1299" height="900" alt="QQ群" src="https://github.com/user-attachments/assets/2dc9e1ff-7fa2-4814-83a7-628d1c627d06" />
