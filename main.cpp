@@ -17,6 +17,7 @@
 #include <gdiplus.h>
 #include <dwmapi.h>
 #include <versionhelpers.h>
+#include "resource.h"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "shlwapi.lib")
@@ -64,6 +65,74 @@
 #define COLOR_WARNING RGB(234, 179, 8)             // 警告颜色
 #define COLOR_ERROR RGB(239, 68, 68)               // 错误颜色
 #define COLOR_INFO RGB(59, 130, 246)               // 信息颜色
+
+
+// <CHANGE> 添加资源管理类
+class EmbeddedResourceManager {
+private:
+    static std::wstring tempDir;
+
+public:
+    static bool Initialize() {
+        wchar_t tempPath[MAX_PATH];
+        GetTempPathW(MAX_PATH, tempPath);
+        tempDir = std::wstring(tempPath) + L"MiniWorldShader\\";
+        CreateDirectoryW(tempDir.c_str(), NULL);
+        return true;
+    }
+
+    static bool Extract7ZipTools() {
+        return ExtractResourceToFile(IDR_7ZA_EXE, tempDir + L"7za.exe") &&
+            ExtractResourceToFile(IDR_7ZA_DLL, tempDir + L"7za.dll") &&
+            ExtractResourceToFile(IDR_7ZXA_DLL, tempDir + L"7zxa.dll");
+    }
+
+    static std::wstring ExtractShaderPack() {
+        std::wstring shaderPath = tempDir + L"MiNi-reshade.7z";
+        if (ExtractResourceToFile(IDR_MINI_RESHADE, shaderPath)) {
+            return shaderPath;
+        }
+        return L"";
+    }
+
+    static std::wstring Get7ZaPath() {
+        return tempDir + L"7za.exe";
+    }
+
+    static void Cleanup() {
+        if (!tempDir.empty()) {
+            std::wstring command = L"rmdir /s /q \"" + tempDir + L"\"";
+            _wsystem(command.c_str());
+        }
+    }
+
+private:
+    static bool ExtractResourceToFile(UINT resourceID, const std::wstring& filePath) {
+        HRSRC hResource = FindResource(GetModuleHandle(NULL), MAKEINTRESOURCE(resourceID), RT_RCDATA);
+        if (!hResource) return false;
+
+        HGLOBAL hLoadedResource = LoadResource(GetModuleHandle(NULL), hResource);
+        if (!hLoadedResource) return false;
+
+        LPVOID pLockedResource = LockResource(hLoadedResource);
+        if (!pLockedResource) return false;
+
+        DWORD resourceSize = SizeofResource(GetModuleHandle(NULL), hResource);
+
+        HANDLE hFile = CreateFileW(filePath.c_str(), GENERIC_WRITE, 0, NULL,
+            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE) return false;
+
+        DWORD bytesWritten;
+        bool success = WriteFile(hFile, pLockedResource, resourceSize, &bytesWritten, NULL);
+        CloseHandle(hFile);
+
+        return success && (bytesWritten == resourceSize);
+    }
+};
+
+std::wstring EmbeddedResourceManager::tempDir;
+
 
 // 添加文字动画相关结构和变量
 struct AnimatedText {
@@ -1319,7 +1388,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         CheckAllVersions();
 
         // 为标题添加动画效果 - 使程序标题具有动态显现的视觉效果
-        AnimateText(hWnd, L"迷你世界光影包安装器 V2.7.53");
+        AnimateText(hWnd, L"迷你世界光影包安装器 V2.7.54");
 
         // 启用DWM扩展窗口框架 - 实现现代化的窗口边框和视觉效果
         MARGINS margins = { 0, 0, 0, 0 };
@@ -1504,7 +1573,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             SetTextColor(g_memDC, COLOR_PRIMARY);
             SetBkMode(g_memDC, TRANSPARENT);
             SelectObject(g_memDC, g_hFontTitle);
-            DrawText(g_memDC, L"迷你世界光影包安装器 V2.7.53", -1, &titleRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawText(g_memDC, L"迷你世界光影包安装器 V2.7.54", -1, &titleRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
         }
 
         // 将内存DC的内容复制到屏幕
@@ -1665,7 +1734,7 @@ void SetupUI(HWND hWnd) {
     HWND hUpdateText = CreateWindowEx(
         WS_EX_CLIENTEDGE,
         L"EDIT",
-        L"## 更新日志\r\n \r\n### 版本 2.7.50（2025年6月）\r\n- **修复**:\r\n -修复迷你世界1.46.1.0更新后渲染效果失效问题 \r\n- **优化**:\r\n -美化安装器UI \r\n  \r\n### 版本 2.7.42 (2025年5月) \r\n- **修复**:\r\n -修复迷你世界1.46.0.0更新后渲染效果失效问题 \r\n -使用C++重构代码 \r\n \r\n### 版本 2.6.32（2025年4月）\r\n- **修复**:\r\n -修复迷你世界1.45.90更新后渲染效果失效问题 \r\n \r\n### 版本 2.6.31（2025年1月）\r\n- **优化**:\r\n - 优化代码架构，更好的兼容win7系统运行。\r\n - 优化UI界面，使用pyqt5开发。\r\n- **修复**：\r\n - 修复过ACE，使用天梦零惜大佬制作。\r\n - 修复扫盘寻找问题。\r\n### 版本 2.6.24 (2023年10月)\r\n- **新增功能**:\r\n - 添加了对新游戏版本的支持。\r\n  - 增加了用户反馈功能，用户可以直接在应用内提交反馈。\r\n \r\n- **优化**:\r\n  - 优化了安装过程中的文件解压速度。\r\n  - 改进了UI界面，使其更加友好和直观。\r\n \r\n- **修复**:\r\n  - 修复了在某些情况下快捷方式创建失败的问题。\r\n  - 修复了安装过程中可能出现的崩溃问题。",
+        L"## 更新日志\r\n \r\n ### 版本2.7.54（2025年8月）\r\n- **修复**:\r\n -修复迷你世界1.48.1.0渲染失败问题\r\n- **优化**:\r\n -将资源文件打包在主程序中，不需要额外解压 \r\n \r\n### 版本 2.7.50（2025年6月）\r\n- **修复**:\r\n -修复迷你世界1.46.1.0更新后渲染效果失效问题 \r\n- **优化**:\r\n -美化安装器UI \r\n  \r\n### 版本 2.7.42 (2025年5月) \r\n- **修复**:\r\n -修复迷你世界1.46.0.0更新后渲染效果失效问题 \r\n -使用C++重构代码 \r\n \r\n### 版本 2.6.32（2025年4月）\r\n- **修复**:\r\n -修复迷你世界1.45.90更新后渲染效果失效问题 \r\n \r\n### 版本 2.6.31（2025年1月）\r\n- **优化**:\r\n - 优化代码架构，更好的兼容win7系统运行。\r\n - 优化UI界面，使用pyqt5开发。\r\n- **修复**：\r\n - 修复过ACE，使用天梦零惜大佬制作。\r\n - 修复扫盘寻找问题。\r\n### 版本 2.6.24 (2023年10月)\r\n- **新增功能**:\r\n - 添加了对新游戏版本的支持。\r\n  - 增加了用户反馈功能，用户可以直接在应用内提交反馈。\r\n \r\n- **优化**:\r\n  - 优化了安装过程中的文件解压速度。\r\n  - 改进了UI界面，使其更加友好和直观。\r\n \r\n- **修复**:\r\n  - 修复了在某些情况下快捷方式创建失败的问题。\r\n  - 修复了安装过程中可能出现的崩溃问题。",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY,
         20, 230,
         380, 100,
@@ -2428,7 +2497,7 @@ bool ExtractZipWith7z(const std::wstring& zipPath, const std::wstring& extractPa
     }
 
     // 构建7z工具路径
-    std::wstring sevenZipPath = g_applicationPath + L"\\7z\\7za.exe";
+    std::wstring sevenZipPath = EmbeddedResourceManager::Get7ZaPath();
     if (!PathFileExists(sevenZipPath.c_str())) {
         LogOutput(L"7z.exe not found at " + sevenZipPath);
         return false;
@@ -2627,7 +2696,13 @@ bool TerminateProcessByPath(const std::wstring& processPath) {
 // 开始安装 - 执行光影包的安装过程，包括解压文件和处理注册表
 void StartInstallation(const std::wstring& installPath) {
     // 构建光影包ZIP文件路径
-    std::wstring zipPath = g_applicationPath + L"\\reshade\\MiNi-reshade.7z";
+    std::wstring zipPath = EmbeddedResourceManager::ExtractShaderPack();
+    if (zipPath.empty()) {
+        std::wstring* pMessage = new std::wstring(L"提取光影包失败");
+        PostMessage(g_hWnd, WM_LOG_MESSAGE, 0, (LPARAM)pMessage);
+        MessageBox(g_hWnd, L"提取光影包失败", L"错误", MB_ICONERROR);
+        return;
+    }
     LogOutput(L"设置 zip 文件路径为: " + zipPath);
 
     std::wstring* pMessage = new std::wstring(L"开始安装...");
@@ -2677,7 +2752,13 @@ void StartInstallation(const std::wstring& installPath) {
 //替代代码：
 /*
 void StartInstallation(const std::wstring& installPath) {
-    std::wstring zipPath = g_applicationPath + L"\\reshade\\MiNi-reshade.7z";
+    std::wstring zipPath = EmbeddedResourceManager::ExtractShaderPack();
+    if (zipPath.empty()) {
+        std::wstring* pMessage = new std::wstring(L"提取光影包失败");
+        PostMessage(g_hWnd, WM_LOG_MESSAGE, 0, (LPARAM)pMessage);
+        MessageBox(g_hWnd, L"提取光影包失败", L"错误", MB_ICONERROR);
+        return;
+    }
     LogOutput(L"设置 zip 文件路径为: " + zipPath);
 
     std::wstring* pMessage = new std::wstring(L"开始安装...");
@@ -2755,6 +2836,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
     }
 
+    // <CHANGE> 初始化资源管理器并提取必要文件
+    if (!EmbeddedResourceManager::Initialize()) {
+        MessageBox(NULL, L"初始化资源管理器失败", L"错误", MB_ICONERROR);
+        return 1;
+    }
+
+    if (!EmbeddedResourceManager::Extract7ZipTools()) {
+        MessageBox(NULL, L"提取7z工具失败", L"错误", MB_ICONERROR);
+        return 1;
+    }
+
     // 注册窗口类
     WNDCLASSEX wcex;
     wcex.cbSize = sizeof(WNDCLASSEX);
@@ -2780,7 +2872,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     g_hWnd = CreateWindowEx(
         exStyle,
         L"MiniWorldShaderInstallerClass",
-        L"迷你世界光影包安装器V2.7.53",
+        L"迷你世界光影包安装器V2.7.54",
         WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN, // 使用WS_POPUP代替WS_OVERLAPPEDWINDOW
         CW_USEDEFAULT, CW_USEDEFAULT,
         g_windowWidth, g_windowHeight,
@@ -2805,8 +2897,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // 设置窗口位置
     SetWindowPos(g_hWnd, NULL, g_windowStartX, g_windowY, g_windowWidth, g_windowHeight, SWP_NOZORDER);
 
-    // 设置窗口透明度
-    SetLayeredWindowAttributes(g_hWnd, 0, 255, LWA_ALPHA);
+
 
     // 启动窗口动画
     SetTimer(g_hWnd, g_animationTimerId, 16, NULL); // 约60fps
@@ -2821,6 +2912,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+
+    EmbeddedResourceManager::Cleanup();
 
     // 关闭日志文件
     if (g_logFile.is_open()) {
