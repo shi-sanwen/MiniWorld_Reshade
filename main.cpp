@@ -1,4 +1,4 @@
-﻿#include <windows.h>
+#include <windows.h>
 #include <commctrl.h>
 #include <shlobj.h>
 #include <shlwapi.h>
@@ -1704,7 +1704,7 @@ void SetupUI(HWND hWnd) {
     HWND hCopyrightText = CreateWindowEx(
         WS_EX_CLIENTEDGE,
         L"EDIT",
-        L"版权声明： \r\n \r\n本作品（包括但不限于文字、图片、音频、视频、设计元素等）的版权归作者\"创梦星际\"共所有。未经作者及工作室明确书面授权，任何个人、组织或机构不得以任何形式复制、分发、传播、展示、修改、改编或以其他任何方式使用本作品的全部或部分内容。作者及工作室保留对本作品的全部权利，包括但不限于著作权、商标权、专利权等。任何未经授权的使用行为均构成侵权，作者及工作室将依法追究侵权者的法律责任，并要求侵权者承担相应的赔偿责任。如需获取本作品的授权使用，请与\"迷影、大喵工作室、Qichee、创梦星际\"工作室联系，工作室将根据具体情况决定是否授权以及授权的条件和范围。作者及工作室保留随时修改、更新或终止本版权声明的权利，而无需事先通知任何第三方。作者及工作室对本版权声明拥有最终解释权。\r\n \r\n联系方式：\r\n工作室名称：创梦星际\r\n地址：https://www.scmgzs.top/\r\n联系邮箱：ssw2196634956@outlook.com",
+        L"本作品采用 [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0) 开源协议。\r\n\r\n 版权所有 © 2025 创梦星际\r\n\r\n在遵守 Apache 2.0 协议的前提下，您可以自由地使用、复制、修改和分发本作品。\r\n有关许可的详细信息，请访问[Apache License 2.0 全文](http://www.apache.org/licenses/LICENSE-2.0)。\r\n \r\n联系方式：\r\n工作室名称：创梦星际\r\n地址：https://www.scmgzs.top/\r\n联系邮箱：ssw2196634956@outlook.com",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY,
         20, 95,
         380, 100,
