@@ -1,4 +1,4 @@
-# MiniWorld_Reshade
+# 迷你世界reshade安装工具（MiniReshade）
 
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-green.svg)
